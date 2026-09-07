@@ -1,10 +1,10 @@
-
+<!doctype html>
 <html lang="es">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Organizador de puestos</title>
 <style>
-:root{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#172033;background:#f4f6f8}*{box-sizing:border-box}body{margin:0}.wrap{max-width:1000px;margin:auto;padding:20px}.card{background:#fff;border:1px solid #dfe4ea;border-radius:16px;padding:18px;margin-bottom:16px;box-shadow:0 3px 14px #00000008}h1{margin:0 0 6px;font-size:25px}p{color:#667085}.row{display:flex;gap:10px;flex-wrap:wrap}.btn{border:0;border-radius:10px;padding:11px 15px;font-weight:700;cursor:pointer;background:#172033;color:white}.btn.alt{background:#e9edf2;color:#172033}.btn.go{background:#087f5b}.btn.small{padding:8px 11px}.hint{font-size:13px;color:#667085}textarea{width:100%;min-height:230px;border:1px solid #cfd6df;border-radius:12px;padding:13px;font:14px ui-monospace,SFMono-Regular,Menlo,monospace;resize:vertical}.summary{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}.pill{background:#eef2f6;padding:8px 11px;border-radius:999px;font-size:13px}.table{width:100%;border-collapse:collapse}.table th,.table td{text-align:left;padding:10px 8px;border-bottom:1px solid #edf0f3;vertical-align:top}.table th{font-size:12px;color:#667085}.order{font-weight:800;width:45px}.pm{font-weight:800;white-space:nowrap}.actions{white-space:nowrap}.empty{text-align:center;color:#667085;padding:25px}.notice{background:#eaf8f1;border:1px solid #b9e6cf;border-radius:12px;padding:12px;color:#146c43;font-size:13px}@media(max-width:650px){.wrap{padding:12px}.card{padding:13px}.table th:nth-child(2),.table td:nth-child(2){display:none}.btn{width:100%}.actions .btn{width:auto}.table{font-size:14px}}
+:root{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;color:#172033;background:#f4f6f8}*{box-sizing:border-box}body{margin:0}.wrap{max-width:1000px;margin:auto;padding:20px}.card{background:#fff;border:1px solid #dfe4ea;border-radius:16px;padding:18px;margin-bottom:16px;box-shadow:0 3px 14px #00000008}h1{margin:0 0 6px;font-size:25px}p{color:#667085}.row{display:flex;gap:10px;flex-wrap:wrap}.btn{border:0;border-radius:10px;padding:11px 15px;font-weight:700;cursor:pointer;background:#172033;color:white}.btn.alt{background:#e9edf2;color:#172033}.btn.go{background:#087f5b}.btn.small{padding:8px 11px}.hint{font-size:13px;color:#667085}textarea{width:100%;min-height:230px;border:1px solid #cfd6df;border-radius:12px;padding:13px;font:14px ui-monospace,SFMono-Regular,Menlo,monospace;resize:vertical}.summary{display:flex;gap:10px;flex-wrap:wrap;margin:12px 0}.pill{background:#eef2f6;padding:8px 11px;border-radius:999px;font-size:13px}.table{width:100%;border-collapse:collapse}.table th,.table td{text-align:left;padding:10px 8px;border-bottom:1px solid #edf0f3;vertical-align:top}.table th{font-size:12px;color:#667085}.order{font-weight:800;width:45px}.pm{font-weight:800;white-space:nowrap}.actions{white-space:nowrap}.empty{text-align:center;color:#667085;padding:25px}.notice{background:#eaf8f1;border:1px solid #b9e6cf;border-radius:12px;padding:12px;color:#146c43;font-size:13px}@media(max-width:650px){.wrap{padding:12px}.card{padding:13px}.btn{width:100%}.table thead{display:none}.table,.table tbody,.table tr,.table td{display:block;width:100%}.table{border-collapse:separate}.table tr{border:1px solid #e3e7ec;border-radius:12px;padding:10px 12px;margin-bottom:10px;background:#fff}.table td{border-bottom:0;padding:5px 0;display:flex;justify-content:space-between;align-items:center;gap:10px;white-space:normal}.table td::before{content:attr(data-label);font-weight:700;color:#667085;font-size:11px;text-transform:uppercase;letter-spacing:.03em;flex-shrink:0}.actions{justify-content:flex-end !important}.actions .btn{width:auto}}
 </style>
 </head>
 <body>
@@ -29,7 +29,12 @@
 const example=`PM\tOrden lógico\tUbicacion\nAAA-001\t1\tCalle Uno y Calle Dos\nAAA-002\t2\tAv. Ejemplo y Calle Tres\nAAA-003\t3\tCalle Cuatro y Calle Cinco\nAAA-004\t4\t-33.0149, -60.6224`;
 const input=document.getElementById('input'), results=document.getElementById('results'), summary=document.getElementById('summary'), notice=document.getElementById('notice');
 function getCity(){const sel=document.getElementById('city');return sel.value==='__custom__'?document.getElementById('customCity').value.trim():sel.value.trim()}
-function mapsUrl(loc){let s=loc.trim();let isCoord=/^-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?$/.test(s);let city=getCity();let q=isCoord?s:(city?(s+', '+city):s);return 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q)}
+function normalizeConjunction(s){
+ // "Pepito e Ignacio" -> "Pepito & Ignacio": Maps interpreta "e" suelta como
+ // dos direcciones distintas (origen/destino) en vez de una esquina.
+ return s.replace(/\be\b/gi,'&');
+}
+function mapsUrl(loc){let s=loc.trim();let isCoord=/^-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?$/.test(s);let city=getCity();let base=isCoord?s:normalizeConjunction(s);let q=isCoord?base:(city?(base+', '+city):base);return 'https://www.google.com/maps/search/?api=1&query='+encodeURIComponent(q)}
 function parse(text){
  const lines=text.split(/\r?\n/).map(x=>x.trim()).filter(Boolean); const out=[];
  for(const line of lines){
@@ -50,7 +55,7 @@ function parse(text){
  return out.filter(x=>x.loc.length>2);
 }
 function render(){const data=parse(input.value);results.innerHTML=''; if(!data.length){results.innerHTML='<tr><td colspan="4" class="empty">No pude detectar ubicaciones. Probá pegando una dirección por línea o el formato PM / orden / ubicación.</td></tr>';summary.innerHTML='';notice.style.display='none';return;}
- data.forEach((x,i)=>{let tr=document.createElement('tr');let n=x.ord||i+1;tr.innerHTML=`<td class="order">${n}</td><td class="pm">${esc(x.pm||'—')}</td><td>${esc(x.loc)}</td><td class="actions"><a class="btn go small" target="_blank" rel="noopener" href="${mapsUrl(x.loc)}">🧭 IR</a></td>`;results.appendChild(tr);});
+ data.forEach((x,i)=>{let tr=document.createElement('tr');let n=x.ord||i+1;tr.innerHTML=`<td class="order" data-label="Orden">${n}</td><td class="pm" data-label="PM">${esc(x.pm||'—')}</td><td data-label="Ubicación">${esc(x.loc)}</td><td class="actions" data-label="Acción"><a class="btn go small" target="_blank" rel="noopener" href="${mapsUrl(x.loc)}">🧭 IR</a></td>`;results.appendChild(tr);});
  summary.innerHTML=`<span class="pill">📍 ${data.length} destinos</span><span class="pill">🔎 ${data.filter(x=>/^-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?$/.test(x.loc)).length} con coordenadas</span>`;
  notice.style.display='block'; notice.textContent='Listo. "IR" abre Google Maps en una pestaña nueva con el destino.';
 }
@@ -60,3 +65,4 @@ const city=document.getElementById('city'), customCity=document.getElementById('
 city.addEventListener('change',()=>{customCity.style.display=city.value==='__custom__'?'block':'none';if(city.value==='__custom__')customCity.focus();if(input.value.trim())render()});
 customCity.addEventListener('input',()=>{if(input.value.trim())render()});
 </script></body></html>
+
